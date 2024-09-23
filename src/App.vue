@@ -1,74 +1,91 @@
-<script setup></script>
+<script setup>
+import { onMounted, ref } from "vue";
+
+const textTask = ref("");
+let idTask = ref(0);
+const listTask = ref([]);
+
+function addTaskTodo() {
+    textTask.value = textTask.value.trim();
+    if (textTask.value !== "") {
+        listTask.value.unshift({
+            id: idTask.value++,
+            content: textTask.value,
+            checked: false,
+        });
+    }
+    addLocal();
+    clearInputTask();
+}
+
+function clearInputTask() {
+    textTask.value = "";
+}
+
+function addLocal() {
+    localStorage.setItem("check", JSON.stringify(listTask.value));
+}
+
+function deleteTaskTodo(task) {
+    listTask.value = listTask.value.filter((item) => item !== task);
+    addLocal();
+}
+
+onMounted(() => {
+    listTask.value = JSON.parse(localStorage.getItem("check")) || clearInputTask();
+});
+</script>
 
 <template>
     <section class="todo">
         <div class="todo__inner">
             <div class="todo__task task">
-                <input type="text" class="task__input" />
+                <input
+                    v-model="textTask"
+                    type="text"
+                    class="task__input"
+                    @keypress.enter="addTaskTodo"
+                />
                 <div class="task__action">
-                    <button class="task__add button">ДОБАВИТЬ</button>
-                    <button class="task__clean button">ОЧИСТИТЬ</button>
+                    <button class="task__add button" @click="addTaskTodo">
+                        ДОБАВИТЬ
+                    </button>
+                    <button class="task__clean button" @click="clearInputTask">
+                        ОЧИСТИТЬ
+                    </button>
                 </div>
             </div>
-            <ul class="todo__list">
-                <li class="todo__item">
-                    <div class="todo__container">
+            <ul class="todo__list" v-if="listTask.length">
+                <li v-for="item of listTask" :key="item.id" class="todo__item">
+                    <div
+                        class="todo__container"
+                        :class="{
+                            'todo__container--done': item.checked === 'on',
+                        }"
+                    >
                         <input
                             type="checkbox"
                             name="todo-checkbox"
                             id="todo-checkbox"
                             class="todo__checkbox"
                             title="Отметить выполнение"
+                            v-model="item.checked"
+                            true-value="on"
+                            false-value="off"
                         />
-                        <p class="todo__content">
-                            Далеко-далеко за словесными горами в стране.
-                        </p>
-                        <button
-                            type="button"
-                            class="todo__delete button"
-                            id="todo__delete"
+                        <p
+                            class="todo__content"
+                            :class="{
+                                'todo__content--done': item.checked === 'on',
+                            }"
                         >
-                            УДАЛИТЬ
-                        </button>
-                    </div>
-                </li>
-                <li class="todo__item">
-                    <div class="todo__container">
-                        <input
-                            type="checkbox"
-                            name="todo-checkbox"
-                            id="todo-checkbox"
-                            class="todo__checkbox"
-                            title="Отметить выполнение"
-                        />
-                        <p class="todo__content">
-                            Далеко-далеко за словесными горами в стране.
+                            {{ item.content }}
                         </p>
                         <button
                             type="button"
                             class="todo__delete button"
                             id="todo__delete"
-                        >
-                            УДАЛИТЬ
-                        </button>
-                    </div>
-                </li>
-                <li class="todo__item">
-                    <div class="todo__container">
-                        <input
-                            type="checkbox"
-                            name="todo-checkbox"
-                            id="todo-checkbox"
-                            class="todo__checkbox"
-                            title="Отметить выполнение"
-                        />
-                        <p class="todo__content">
-                            Далеко-далеко за словесными горами в стране.
-                        </p>
-                        <button
-                            type="button"
-                            class="todo__delete button"
-                            id="todo__delete"
+                            @click="deleteTaskTodo(item)"
                         >
                             УДАЛИТЬ
                         </button>
@@ -109,45 +126,51 @@
     // .todo__list
 
     &__list {
-      display: flex;
-      flex-direction: column;
-      row-gap: var(--gap-12);
+        display: flex;
+        flex-direction: column;
+        row-gap: var(--gap-12);
     }
 
     // .todo__item
 
     &__item {
-      display: block;
-      border-radius: 12px;
-      padding: 12px;
-      background-color: rgba(255, 130, 130, 0.411);      
+        display: block;
     }
 
     // .todo__container
 
     &__container {
-      display: flex;
-      align-items: center;
-      flex-flow: row wrap;
-      gap: var(--gap-12);
+        display: flex;
+        align-items: center;
+        flex-flow: row wrap;
+        gap: var(--gap-12);
+        border-radius: 12px;
+        padding: 12px;
+        background-color: rgba(255, 130, 130, 0.411);
+        &--done {
+            background-color: rgba(165, 255, 130, 0.411);
+        }
     }
 
     // .todo__checkbox
 
     &__checkbox {
-      width: 16px;
-      height: 16px;
+        width: 16px;
+        height: 16px;
     }
 
     // .todo__content
 
     &__content {
+        &--done {
+            text-decoration: line-through;
+        }
     }
 
     // .todo__delete
 
     &__delete {
-      margin-left: auto;
+        margin-left: auto;
     }
 }
 .task {
@@ -189,7 +212,5 @@
 
     &__delete {
     }
-}
-.button {
 }
 </style>
