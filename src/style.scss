@@ -25,5 +25,19 @@ li {
     background-color: #465bd3;
     font-weight: 600;
     color: #fff;
-    letter-spacing: .5px;
+    letter-spacing: 0.5px;
+}
+
+.input {
+    padding: var(--gap-12) 10px;
+    flex-grow: 1;
+    border: none;
+    border-bottom: 2px solid #3b3b3b;
+    background-color: transparent;
+    outline: none;
+    font-size: 20px;
+    font-weight: 400;
+    &:focus {
+        border-color: #afe6ff;
+    }
 }

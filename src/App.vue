@@ -4,6 +4,7 @@ import { onMounted, ref } from "vue";
 const textTask = ref("");
 let idTask = ref(0);
 const listTask = ref([]);
+const editableTask = ref(null);
 
 function addTaskTodo() {
     textTask.value = textTask.value.trim();
@@ -31,8 +32,26 @@ function deleteTaskTodo(task) {
     addLocal();
 }
 
+function editTask(task) {
+    editableTask.value = { ...task };
+}
+
+function updateTask(task) {
+    const taskIndex = listTask.value.findIndex((t) => t.id === task.id);
+    if (taskIndex !== -1) {
+        listTask.value[taskIndex].content = editableTask.value.content;
+        addLocal();
+        editableTask.value = null;
+    }
+}
+
+function cancelEdit() {
+    editableTask.value = null;
+}
+
 onMounted(() => {
-    listTask.value = JSON.parse(localStorage.getItem("check")) || clearInputTask();
+    listTask.value =
+        JSON.parse(localStorage.getItem("check")) || clearInputTask();
 });
 </script>
 
@@ -43,7 +62,7 @@ onMounted(() => {
                 <input
                     v-model="textTask"
                     type="text"
-                    class="task__input"
+                    class="task__input input"
                     @keypress.enter="addTaskTodo"
                 />
                 <div class="task__action">
@@ -57,38 +76,39 @@ onMounted(() => {
             </div>
             <ul class="todo__list" v-if="listTask.length">
                 <li v-for="item of listTask" :key="item.id" class="todo__item">
-                    <div
-                        class="todo__container"
-                        :class="{
-                            'todo__container--done': item.checked === 'on',
-                        }"
-                    >
+                    <div class="todo__container">
                         <input
                             type="checkbox"
-                            name="todo-checkbox"
-                            id="todo-checkbox"
-                            class="todo__checkbox"
-                            title="Отметить выполнение"
                             v-model="item.checked"
                             true-value="on"
                             false-value="off"
-                        />
-                        <p
-                            class="todo__content"
-                            :class="{
-                                'todo__content--done': item.checked === 'on',
-                            }"
-                        >
-                            {{ item.content }}
-                        </p>
-                        <button
-                            type="button"
-                            class="todo__delete button"
-                            id="todo__delete"
-                            @click="deleteTaskTodo(item)"
-                        >
-                            УДАЛИТЬ
-                        </button>
+                            class="todo__checkbox"
+                        />              
+                        
+                        <template v-if="editableTask && editableTask.id === item.id">
+                            <input
+                                v-model="editableTask.content"
+                                @blur="updateTask(item)"
+                                @keypress.enter="updateTask(item)"
+                                type="text"
+                                class="todo__edit-input input"
+                            />
+                            <button class="button" @click="updateTask(item)">Сохранить</button>
+                            <button class="button" @click="cancelEdit">Отмена</button>
+                        </template>
+                        
+                        <template v-else>
+                            <p
+                                @dblclick="editTask(item)"
+                                :class="{ 'todo__content--done': item.checked === 'on' }"
+                                class="todo__content"
+                            >
+                                {{ item.content }}
+                            </p>
+                            <button @click="deleteTaskTodo(item)" class="todo__delete button">
+                                УДАЛИТЬ
+                            </button>
+                        </template>
                     </div>
                 </li>
             </ul>
@@ -158,6 +178,10 @@ onMounted(() => {
         width: 16px;
         height: 16px;
     }
+    // .todo__edit-input
+
+    &__edit-input {
+    }
 
     // .todo__content
 
@@ -184,16 +208,7 @@ onMounted(() => {
     // .task__input
 
     &__input {
-        padding: var(--gap-12) 10px;
-        flex-grow: 1;
-        border: none;
-        border-bottom: 2px solid #3b3b3b;
-        outline: none;
-        font-size: 20px;
-        font-weight: 400;
-        &:focus {
-            border-color: #afe6ff;
-        }
+        
     }
 
     // .task__action
